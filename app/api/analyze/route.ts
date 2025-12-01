@@ -1,4 +1,4 @@
-import { model } from "@/lib/gemini";
+import { groq } from "@/lib/groq";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -8,14 +8,6 @@ export async function POST(req: Request) {
         if (!imageUrl) {
             return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
         }
-
-        // Fetch the image
-        const imageResp = await fetch(imageUrl);
-        if (!imageResp.ok) {
-            return NextResponse.json({ error: "Failed to fetch image" }, { status: 400 });
-        }
-
-        const imageBuffer = await imageResp.arrayBuffer();
 
         const prompt = `Analyze this food image. Identify the food item and estimate the nutritional content (calories, carbs in g, protein in g, fat in g). 
     Return ONLY a valid JSON object with these keys: 
@@ -27,27 +19,43 @@ export async function POST(req: Request) {
     
     Do not include markdown formatting like \`\`\`json. Just the raw JSON.`;
 
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: Buffer.from(imageBuffer).toString("base64"),
-                    mimeType: imageResp.headers.get("content-type") || "image/jpeg",
+        const completion = await groq.chat.completions.create({
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        {
+                            type: "text",
+                            text: prompt,
+                        },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: imageUrl,
+                            },
+                        },
+                    ],
                 },
-            },
-        ]);
+            ],
+            model: "llama-3.2-90b-vision-preview",
+            temperature: 0.1,
+            max_tokens: 1024,
+            top_p: 1,
+            stream: false,
+            response_format: { type: "json_object" },
+        });
 
-        const response = await result.response;
-        const text = response.text();
+        const content = completion.choices[0].message.content;
 
-        // Clean up markdown if present (just in case)
-        const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        if (!content) {
+            throw new Error("No content received from Groq");
+        }
 
         try {
-            const data = JSON.parse(cleanText);
+            const data = JSON.parse(content);
             return NextResponse.json(data);
         } catch (e) {
-            console.error("Failed to parse JSON:", text, e);
+            console.error("Failed to parse JSON:", content, e);
             return NextResponse.json({ error: "Failed to parse AI response" }, { status: 500 });
         }
 
