@@ -52,7 +52,8 @@ export async function POST(req: Request) {
         }
 
     } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: "Failed to analyze image" }, { status: 500 });
+        console.error("Analysis error:", error);
+        // @ts-ignore
+        return NextResponse.json({ error: `Failed to analyze image: ${error.message || error}` }, { status: 500 });
     }
 }

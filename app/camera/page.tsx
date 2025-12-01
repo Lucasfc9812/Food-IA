@@ -43,7 +43,8 @@ export default function CameraPage() {
 
         } catch (error) {
             console.error("Error uploading:", error);
-            alert("Failed to upload image. Please try again.");
+            // @ts-ignore
+            alert(`Failed to upload image: ${error.message || error}`);
             setIsUploading(false);
         }
     }, [router]);

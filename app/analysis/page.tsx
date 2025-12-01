@@ -46,7 +46,8 @@ function AnalysisContent() {
                 setData(result);
             } catch (error) {
                 console.error("Analysis failed:", error);
-                alert("Failed to analyze image.");
+                // @ts-ignore
+                alert(`Analysis failed: ${error.message || error}`);
             } finally {
                 setLoading(false);
             }
