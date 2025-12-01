@@ -1,4 +1,4 @@
-import { openai } from "@/lib/openai";
+import { model } from "@/lib/gemini";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -9,15 +9,15 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
         }
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                {
-                    role: "user",
-                    content: [
-                        {
-                            type: "text",
-                            text: `Analyze this food image. Identify the food item and estimate the nutritional content (calories, carbs in g, protein in g, fat in g). 
+        // Fetch the image
+        const imageResp = await fetch(imageUrl);
+        if (!imageResp.ok) {
+            return NextResponse.json({ error: "Failed to fetch image" }, { status: 400 });
+        }
+
+        const imageBuffer = await imageResp.arrayBuffer();
+
+        const prompt = `Analyze this food image. Identify the food item and estimate the nutritional content (calories, carbs in g, protein in g, fat in g). 
 Return ONLY a valid JSON object with these keys: 
 - calories (number)
 - carbs (number)
@@ -25,32 +25,29 @@ Return ONLY a valid JSON object with these keys:
 - fat (number)
 - food_name (string)
 
-Do not include markdown formatting. Just the raw JSON.`,
-                        },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                url: imageUrl,
-                            },
-                        },
-                    ],
+Do not include markdown formatting like \`\`\`json. Just the raw JSON.`;
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: Buffer.from(imageBuffer).toString("base64"),
+                    mimeType: imageResp.headers.get("content-type") || "image/jpeg",
                 },
-            ],
-            response_format: { type: "json_object" },
-            max_tokens: 1024,
-        });
+            },
+        ]);
 
-        const content = completion.choices[0].message.content;
+        const response = await result.response;
+        const text = response.text();
 
-        if (!content) {
-            throw new Error("No content received from OpenAI");
-        }
+        // Clean up markdown if present
+        const cleanText = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
         try {
-            const data = JSON.parse(content);
+            const data = JSON.parse(cleanText);
             return NextResponse.json(data);
         } catch (e) {
-            console.error("Failed to parse JSON:", content, e);
+            console.error("Failed to parse JSON:", text, e);
             return NextResponse.json({ error: "Failed to parse AI response" }, { status: 500 });
         }
 
