@@ -47,7 +47,7 @@ function AnalysisContent() {
             } catch (error) {
                 console.error("Analysis failed:", error);
                 // @ts-ignore
-                alert(`ERRO (v1.4 Llama4): ${error.message || error}`);
+                alert(`ERRO (v2.0 GPT4): ${error.message || error}`);
             } finally {
                 setLoading(false);
             }
@@ -86,7 +86,7 @@ function AnalysisContent() {
                 <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors">
                     <ArrowLeft size={24} />
                 </Link>
-                <h1 className="text-xl font-bold ml-2">Analysis Result (v1.4 Llama4)</h1>
+                <h1 className="text-xl font-bold ml-2">Analysis Result (v2.0 GPT4)</h1>
             </header>
 
             <div className="mb-6 rounded-2xl overflow-hidden shadow-sm border aspect-video relative bg-muted">
