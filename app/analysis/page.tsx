@@ -47,7 +47,7 @@ function AnalysisContent() {
             } catch (error) {
                 console.error("Analysis failed:", error);
                 // @ts-ignore
-                alert(`ERRO (v1.2 Groq): ${error.message || error}`);
+                alert(`ERRO (v1.3 Groq): ${error.message || error}`);
             } finally {
                 setLoading(false);
             }
@@ -86,7 +86,7 @@ function AnalysisContent() {
                 <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors">
                     <ArrowLeft size={24} />
                 </Link>
-                <h1 className="text-xl font-bold ml-2">Analysis Result (v1.2 Groq)</h1>
+                <h1 className="text-xl font-bold ml-2">Analysis Result (v1.3 Groq)</h1>
             </header>
 
             <div className="mb-6 rounded-2xl overflow-hidden shadow-sm border aspect-video relative bg-muted">
