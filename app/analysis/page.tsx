@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
@@ -16,7 +16,7 @@ interface FoodData {
     fat: number;
 }
 
-export default function AnalysisPage() {
+function AnalysisContent() {
     const searchParams = useSearchParams();
     const imageUrl = searchParams.get("imageUrl");
     const router = useRouter();
@@ -167,10 +167,25 @@ export default function AnalysisPage() {
                         className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold text-lg shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 mt-8 active:scale-95"
                     >
                         {saving ? <Loader2 className="animate-spin" /> : <Check />}
-                        Confirm & Save
+                        Confirm &amp; Save
                     </button>
                 </div>
             )}
         </div>
+    );
+}
+
+export default function AnalysisPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-background p-6 max-w-md mx-auto flex items-center justify-center">
+                <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="animate-spin text-primary" size={48} />
+                    <p className="text-muted-foreground">Loading...</p>
+                </div>
+            </div>
+        }>
+            <AnalysisContent />
+        </Suspense>
     );
 }
